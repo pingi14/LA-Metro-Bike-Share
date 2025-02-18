@@ -1,0 +1,98 @@
+fact_transactions
+-----------------
+let
+    Source = Folder.Files("C:\Users\pingi\iCloudDrive\Power BI\Portfolio\LA Metro Bike Share"),
+    #"Filtered Rows" = Table.SelectRows(Source, each ([Extension] = ".csv")),
+    #"Filtered Rows1" = Table.SelectRows(#"Filtered Rows", each Text.StartsWith([Name], "metro-trips-")),
+    #"Filtered Hidden Files1" = Table.SelectRows(#"Filtered Rows1", each [Attributes]?[Hidden]? <> true),
+    #"Invoke Custom Function1" = Table.AddColumn(#"Filtered Hidden Files1", "Transform File", each #"Transform File"([Content])),
+    #"Renamed Columns1" = Table.RenameColumns(#"Invoke Custom Function1", {"Name", "Source.Name"}),
+    #"Removed Other Columns1" = Table.SelectColumns(#"Renamed Columns1", {"Source.Name", "Transform File"}),
+    #"Expanded Table Column1" = Table.ExpandTableColumn(#"Removed Other Columns1", "Transform File", Table.ColumnNames(#"Transform File"(#"Sample File"))),
+    #"Changed Type" = Table.TransformColumnTypes(#"Expanded Table Column1",{{"Source.Name", type text}, {"trip_id", type text}, {"duration", Int64.Type}, {"start_time", type text}, {"end_time", type datetime}, {"start_station", type text}, {"start_lat", type number}, {"start_lon", type number}, {"end_station", Int64.Type}, {"end_lat", type number}, {"end_lon", type number}, {"bike_id", type text}, {"plan_duration", Int64.Type}, {"trip_route_category", type text}, {"passholder_type", type text}, {"bike_type", type text}}),
+    #"Removed Other Columns" = Table.SelectColumns(#"Changed Type",{"trip_id", "duration", "start_time", "start_station", "bike_id", "trip_route_category", "passholder_type", "bike_type"}),
+    #"Filtered Rows2" = Table.SelectRows(#"Removed Other Columns", each [trip_id] <> "trip_id"),
+    #"Duplicated Column" = Table.DuplicateColumn(#"Filtered Rows2", "start_time", "start_time - Copy"),
+    #"Split Column by Delimiter" = Table.SplitColumn(#"Duplicated Column", "start_time - Copy", Splitter.SplitTextByEachDelimiter({"/"}, QuoteStyle.Csv, false), {"start_time - Copy.1", "start_time - Copy.2"}),
+    #"Changed Type1" = Table.TransformColumnTypes(#"Split Column by Delimiter",{{"start_time - Copy.1", Int64.Type}, {"start_time - Copy.2", type text}}),
+    #"Trimmed Text" = Table.TransformColumns(#"Changed Type1",{{"start_time - Copy.2", Text.Trim, type text}}),
+    #"Split Column by Delimiter1" = Table.SplitColumn(#"Trimmed Text", "start_time - Copy.2", Splitter.SplitTextByEachDelimiter({"/"}, QuoteStyle.Csv, false), {"start_time - Copy.2.1", "start_time - Copy.2.2"}),
+    #"Changed Type2" = Table.TransformColumnTypes(#"Split Column by Delimiter1",{{"start_time - Copy.2.1", Int64.Type}, {"start_time - Copy.2.2", type text}}),
+    #"Renamed Columns" = Table.RenameColumns(#"Changed Type2",{{"start_time - Copy.1", "time_month"}, {"start_time - Copy.2.1", "time_day"}}),
+    #"Trimmed Text1" = Table.TransformColumns(#"Renamed Columns",{{"start_time - Copy.2.2", Text.Trim, type text}}),
+    #"Split Column by Delimiter2" = Table.SplitColumn(#"Trimmed Text1", "start_time - Copy.2.2", Splitter.SplitTextByEachDelimiter({" "}, QuoteStyle.Csv, true), {"start_time - Copy.2.2.1", "start_time - Copy.2.2.2"}),
+    #"Changed Type3" = Table.TransformColumnTypes(#"Split Column by Delimiter2",{{"start_time - Copy.2.2.1", Int64.Type}, {"start_time - Copy.2.2.2", type time}}),
+    #"Renamed Columns2" = Table.RenameColumns(#"Changed Type3",{{"start_time - Copy.2.2.1", "time_year"}, {"start_time - Copy.2.2.2", "time_book"}}),
+    #"Added Custom" = Table.AddColumn(#"Renamed Columns2", "booking_date", each Date.From(#datetime([time_year],[time_month],[time_day],0,0,0))),
+    #"Changed Type4" = Table.TransformColumnTypes(#"Added Custom",{{"booking_date", type date}}),
+    #"Removed Columns" = Table.RemoveColumns(#"Changed Type4",{"start_time", "time_month", "time_day", "time_year"}),
+    #"Capitalized Each Word" = Table.TransformColumns(#"Removed Columns",{{"bike_type", Text.Proper, type text}}),
+    #"Removed Duplicates" = Table.Distinct(#"Capitalized Each Word", {"trip_id"}),
+    #"Added Custom1" = Table.AddColumn(#"Removed Duplicates", "hire_duration", each #duration(0,0,0,[duration])),
+    #"Changed Type5" = Table.TransformColumnTypes(#"Added Custom1",{{"hire_duration", type duration}}),
+    #"Added Custom2" = Table.AddColumn(#"Changed Type5", "time_period", each if Time.Hour([time_book]) < 12 then "Morning" else if Time.Hour([time_book]) < 18 then "Afternoon" else "Evening"),
+    #"Changed Type6" = Table.TransformColumnTypes(#"Added Custom2",{{"time_period", type text}}),
+    #"Added Custom3" = Table.AddColumn(#"Changed Type6", "hour", each Time.Hour([time_book])),
+    #"Changed Type7" = Table.TransformColumnTypes(#"Added Custom3",{{"hour", Int64.Type}}),
+    #"Duplicated Column1" = Table.DuplicateColumn(#"Changed Type7", "hour", "hour - Copy"),
+    #"Changed Type8" = Table.TransformColumnTypes(#"Duplicated Column1",{{"hour - Copy", type text}}),
+    #"Renamed Columns3" = Table.RenameColumns(#"Changed Type8",{{"hour - Copy", "hourastext"}})
+in
+    #"Renamed Columns3"
+
+
+dim_StationID
+-------------
+let
+    Source = Csv.Document(File.Contents("C:\Users\pingi\iCloudDrive\Power BI\Portfolio\LA Metro Bike Share\metro-bike-share-stations-2024-01-01.csv"),[Delimiter=",", Columns=7, Encoding=1252, QuoteStyle=QuoteStyle.None]),
+    #"Promoted Headers" = Table.PromoteHeaders(Source, [PromoteAllScalars=true]),
+    #"Changed Type" = Table.TransformColumnTypes(#"Promoted Headers",{{"Station_ID", type text}, {"Station_Name", type text}, {"Day of Go_live_date", type text}, {"Region ", type text}, {"Status", type text}, {"Latitude", type number}, {"Longitude", type number}}),
+    #"Filtered Rows" = Table.SelectRows(#"Changed Type", each [Station_ID] <> null and [Station_ID] <> ""),
+    #"Removed Duplicates" = Table.Distinct(#"Filtered Rows", {"Station_ID"}),
+    #"Replaced Value" = Table.ReplaceValue(#"Removed Duplicates","DTLA","Downtown",Replacer.ReplaceText,{"Region "}),
+    #"Added Custom" = Table.AddColumn(#"Replaced Value", "Station_ID_v1", each "["&[Station_ID]&"] "&[Station_Name]),
+    #"Changed Type1" = Table.TransformColumnTypes(#"Added Custom",{{"Station_ID_v1", type text}})
+in
+    #"Changed Type1"
+
+
+DateTable
+---------
+let
+    StartDate = #date(2021,01,01),
+    YearsToGenerate=3,
+    BaseList=List.Dates(StartDate, YearsToGenerate*366, #duration(1,0,0,0)),
+    #"Converted to Table" = Table.FromList(BaseList, Splitter.SplitByNothing(), null, null, ExtraValues.Error),
+    #"Changed Type" = Table.TransformColumnTypes(#"Converted to Table",{{"Column1", type date}}),
+    #"Renamed Columns" = Table.RenameColumns(#"Changed Type",{{"Column1", "Date"}}),
+    #"Added Custom1" = Table.AddColumn(#"Renamed Columns", "Week Ending Date", each Date.EndOfWeek([Date],6)),
+    #"Changed Type2" = Table.TransformColumnTypes(#"Added Custom1",{{"Week Ending Date", type date}}),
+    #"Inserted Year" = Table.AddColumn(#"Changed Type2", "Year", each Date.Year([Date]), Int64.Type),
+    #"Added Custom2" = Table.AddColumn(#"Inserted Year", "Month Ending", each Date.EndOfMonth([Date])),
+    #"Changed Type3" = Table.TransformColumnTypes(#"Added Custom2",{{"Month Ending", type date}}),
+    #"Extracted Month Name" = Table.TransformColumns(#"Changed Type3", {{"Month Ending", each Date.MonthName(_), type text}}),
+    #"Split Column by Position" = Table.SplitColumn(#"Extracted Month Name", "Month Ending", Splitter.SplitTextByPositions({0, 3}, false), {"Month Ending.1", "Month Ending.2"}),
+    #"Changed Type4" = Table.TransformColumnTypes(#"Split Column by Position",{{"Month Ending.1", type text}, {"Month Ending.2", type text}}),
+    #"Removed Columns1" = Table.RemoveColumns(#"Changed Type4",{"Month Ending.2"}),
+    #"Renamed Columns1" = Table.RenameColumns(#"Removed Columns1",{{"Month Ending.1", "Month Name"}}),
+    #"Inserted Month" = Table.AddColumn(#"Renamed Columns1", "Month", each Date.Month([Date]), Int64.Type),
+    #"Duplicated Column" = Table.DuplicateColumn(#"Inserted Month", "Year", "Year - Copy"),
+    #"Renamed Columns2" = Table.RenameColumns(#"Duplicated Column",{{"Year - Copy", "YearAsText"}}),
+    #"Changed Type5" = Table.TransformColumnTypes(#"Renamed Columns2",{{"YearAsText", type text}}),
+    #"Added Custom4" = Table.AddColumn(#"Changed Type5", "MonthYear", each [Month Name]&" "&Text.End([YearAsText],2)),
+    #"Changed Type7" = Table.TransformColumnTypes(#"Added Custom4",{{"MonthYear", type text}}),
+    #"Duplicated Column1" = Table.DuplicateColumn(#"Changed Type7", "Month", "Month - Copy"),
+    #"Changed Type8" = Table.TransformColumnTypes(#"Duplicated Column1",{{"Month - Copy", type text}}),
+    #"Added Custom5" = Table.AddColumn(#"Changed Type8", "MonthYearAsInteger", each [YearAsText]&""&Text.PadStart([#"Month - Copy"],2,"0")),
+    #"Changed Type9" = Table.TransformColumnTypes(#"Added Custom5",{{"MonthYearAsInteger", type text}}),
+    #"Removed Columns3" = Table.RemoveColumns(#"Changed Type9",{"Month - Copy"}),
+    #"Added Custom6" = Table.AddColumn(#"Removed Columns3", "Month Ending Date", each Date.EndOfMonth([Date])),
+    #"Changed Type10" = Table.TransformColumnTypes(#"Added Custom6",{{"Month Ending Date", type date}}),
+    #"Inserted Day Name" = Table.AddColumn(#"Changed Type10", "Day Name", each Date.DayOfWeekName([Date]), type text),
+    #"Added Custom" = Table.AddColumn(#"Inserted Day Name", "PeriodOfWeek", each if [Day Name] = "Saturday" then "Weekend" else if [Day Name] = "Sunday" then "Weekend" else "Weekday"),
+    #"Changed Type1" = Table.TransformColumnTypes(#"Added Custom",{{"PeriodOfWeek", type text}}),
+    #"Filtered Rows" = Table.SelectRows(#"Changed Type1", each ([YearAsText] <> "2024")),
+    #"Extracted First Characters" = Table.TransformColumns(#"Filtered Rows", {{"Day Name", each Text.Start(_, 3), type text}}),
+    #"Inserted Day of Week" = Table.AddColumn(#"Extracted First Characters", "Day of Week", each Date.DayOfWeek([Date]), Int64.Type)
+in
+    #"Inserted Day of Week"
