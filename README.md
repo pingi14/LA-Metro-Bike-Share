@@ -43,3 +43,7 @@ Other
 
 ![DashboardPage_04](https://github.com/user-attachments/assets/223706bd-f34e-450a-b2d8-4ea727000b75)
 
+## Recommendations
+- Expand Infrastructure at high-demand stations to alleviate docking issues and improve user experience.
+- Target Marketing Efforts towards underrepresented user groups to increase ridership.
+- Enhance Maintenance Schedules to improve reliability and service continuity.
