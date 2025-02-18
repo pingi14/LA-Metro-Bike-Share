@@ -9,4 +9,4 @@ This project utilises Power BI to provide an in-depth analysis of LA Metro's bik
 
 ## Data Model
 Data Source: https://bikeshare.metro.net/about/data/
-![Uploading Data_Model_LA Metro.jpg…]()
+
