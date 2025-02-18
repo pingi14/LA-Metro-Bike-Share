@@ -19,7 +19,6 @@ Overview
 
 ![DashboardPage_01](https://github.com/user-attachments/assets/918289cc-1df6-4351-ae6c-83e7efe11de2)
 
-
 Time/Date Factors
 - 16% Bookings are activated on Saturdays
 - 49% Bookings are activated during the afternoon Period (5pm the most popular)
@@ -35,7 +34,6 @@ Location
 
 ![DashboardPage_03](https://github.com/user-attachments/assets/7ecdcb2d-5aba-475f-8a36-eb738a0f7ec1)
 
-
 Other
 - 8 out of 10 bookings are One Way
 - 166% Increase from 2022 to 2023 towards the use of Electric Bikes
@@ -47,3 +45,7 @@ Other
 - Expand Infrastructure at high-demand stations to alleviate docking issues and improve user experience.
 - Target Marketing Efforts towards underrepresented user groups to increase ridership.
 - Enhance Maintenance Schedules to improve reliability and service continuity.
+
+## Assumptions & Caveats
+- The analysis assumes that the data provided is accurate and representative of the wider user base.
+- Seasonal variations and external factors such as weather conditions were not accounted for in the analysis, which might affect user behavior.
