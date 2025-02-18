@@ -11,6 +11,10 @@ This project utilises Power BI to provide an in-depth analysis of LA Metro's bik
 Data Source: https://bikeshare.metro.net/about/data/
 ![Data_Model_LA Metro](https://github.com/user-attachments/assets/6643db74-4643-42a2-b085-110c92b11579)
 
+## Power BI Report
+
+
+
 ## Summary of Insights
 Overview
 - 52% Booking increase from 2022 to 2023
