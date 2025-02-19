@@ -44,12 +44,23 @@ in
 dim_StationID
 -------------
 let
+    // Retrieving direct .csv file
     Source = Csv.Document(File.Contents("C:\Users\pingi\iCloudDrive\Power BI\Portfolio\LA Metro Bike Share\metro-bike-share-stations-2024-01-01.csv"),[Delimiter=",", Columns=7, Encoding=1252, QuoteStyle=QuoteStyle.None]),
+    
+    // Transforming first row as headers and setting data types
     #"Promoted Headers" = Table.PromoteHeaders(Source, [PromoteAllScalars=true]),
     #"Changed Type" = Table.TransformColumnTypes(#"Promoted Headers",{{"Station_ID", type text}, {"Station_Name", type text}, {"Day of Go_live_date", type text}, {"Region ", type text}, {"Status", type text}, {"Latitude", type number}, {"Longitude", type number}}),
+    
+    // Removing records containing empty or null 'Station_ID'
     #"Filtered Rows" = Table.SelectRows(#"Changed Type", each [Station_ID] <> null and [Station_ID] <> ""),
+    
+    // Removing duplicated 'Station_ID'
     #"Removed Duplicates" = Table.Distinct(#"Filtered Rows", {"Station_ID"}),
+    
+    // Find & replacing acronyms
     #"Replaced Value" = Table.ReplaceValue(#"Removed Duplicates","DTLA","Downtown",Replacer.ReplaceText,{"Region "}),
+    
+    // Adding field where 'Station_ID' and 'Station_Name' are concatenated together
     #"Added Custom" = Table.AddColumn(#"Replaced Value", "Station_ID_v1", each "["&[Station_ID]&"] "&[Station_Name]),
     #"Changed Type1" = Table.TransformColumnTypes(#"Added Custom",{{"Station_ID_v1", type text}})
 in
