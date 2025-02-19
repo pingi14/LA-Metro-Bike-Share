@@ -12,11 +12,10 @@ Data Source: https://bikeshare.metro.net/about/data/
 
 Each data file contained information as per every quarter between 2021 to 2023 and was in .csv format.  
 
+![Data_Model_LA Metro](https://github.com/user-attachments/assets/6643db74-4643-42a2-b085-110c92b11579)
+
 [Please refer link to Power Query Scripts](https://github.com/pingi14/LA-Metro-Bike-Share/blob/main/LAMetro_PowerQueryScripts.txt)
 
-
-
-![Data_Model_LA Metro](https://github.com/user-attachments/assets/6643db74-4643-42a2-b085-110c92b11579)
 ## Summary of Insights
 Overview
 - 52% Booking increase from 2022 to 2023
