@@ -1,17 +1,31 @@
 fact_transactions
 -----------------
 let
+    
+    // Selecting the folder where the files are acrhived
     Source = Folder.Files("C:\Users\pingi\iCloudDrive\Power BI\Portfolio\LA Metro Bike Share"),
+    
+    // Applying filters on file type & title to ensure the correct files are to be retrieved
     #"Filtered Rows" = Table.SelectRows(Source, each ([Extension] = ".csv")),
     #"Filtered Rows1" = Table.SelectRows(#"Filtered Rows", each Text.StartsWith([Name], "metro-trips-")),
-    #"Filtered Hidden Files1" = Table.SelectRows(#"Filtered Rows1", each [Attributes]?[Hidden]? <> true),
-    #"Invoke Custom Function1" = Table.AddColumn(#"Filtered Hidden Files1", "Transform File", each #"Transform File"([Content])),
-    #"Renamed Columns1" = Table.RenameColumns(#"Invoke Custom Function1", {"Name", "Source.Name"}),
-    #"Removed Other Columns1" = Table.SelectColumns(#"Renamed Columns1", {"Source.Name", "Transform File"}),
-    #"Expanded Table Column1" = Table.ExpandTableColumn(#"Removed Other Columns1", "Transform File", Table.ColumnNames(#"Transform File"(#"Sample File"))),
-    #"Changed Type" = Table.TransformColumnTypes(#"Expanded Table Column1",{{"Source.Name", type text}, {"trip_id", type text}, {"duration", Int64.Type}, {"start_time", type text}, {"end_time", type datetime}, {"start_station", type text}, {"start_lat", type number}, {"start_lon", type number}, {"end_station", Int64.Type}, {"end_lat", type number}, {"end_lon", type number}, {"bike_id", type text}, {"plan_duration", Int64.Type}, {"trip_route_category", type text}, {"passholder_type", type text}, {"bike_type", type text}}),
+    
+    // Eliminating irrelevant columns and adding csv.document formula to ensure extra folders in query is not extracted when data for each file is collated
+    #"Removed Other Columns2" = Table.SelectColumns(#"Filtered Rows1",{"Content"}),
+    #"Added Custom4" = Table.AddColumn(#"Removed Other Columns2", "File", each Csv.Document([Content])),
+    #"Removed Other Columns3" = Table.SelectColumns(#"Added Custom4",{"File"}),
+    #"Expanded File" = Table.ExpandTableColumn(#"Removed Other Columns3", "File", {"Column1", "Column2", "Column3", "Column4", "Column5", "Column6", "Column7", "Column8", "Column9", "Column10", "Column11", "Column12", "Column13", "Column14", "Column15", "Column16", "Column17"}, {"Column1", "Column2", "Column3", "Column4", "Column5", "Column6", "Column7", "Column8", "Column9", "Column10", "Column11", "Column12", "Column13", "Column14", "Column15", "Column16", "Column17"}),
+    
+    // Transforming first row as headers
+    #"Promoted Headers" = Table.PromoteHeaders(#"Expanded File", [PromoteAllScalars=true]),
+    #"Changed Type" = Table.TransformColumnTypes(#"Promoted Headers",{{"trip_id", type text}, {"duration", Int64.Type}, {"start_time", type text}, {"end_time", type datetime}, {"start_station", type text}, {"start_lat", type number}, {"start_lon", type number}, {"end_station", Int64.Type}, {"end_lat", type number}, {"end_lon", type number}, {"bike_id", type text}, {"plan_duration", Int64.Type}, {"trip_route_category", type text}, {"passholder_type", type text}, {"bike_type", type text}}),
+    
+    // Removing irrelevant columns
     #"Removed Other Columns" = Table.SelectColumns(#"Changed Type",{"trip_id", "duration", "start_time", "start_station", "bike_id", "trip_route_category", "passholder_type", "bike_type"}),
+    
+    // Removing trip_id records that were null or empty
     #"Filtered Rows2" = Table.SelectRows(#"Removed Other Columns", each [trip_id] <> "trip_id"),
+    
+    // Creating new columns that reveal the booking as date column and as time column
     #"Duplicated Column" = Table.DuplicateColumn(#"Filtered Rows2", "start_time", "start_time - Copy"),
     #"Split Column by Delimiter" = Table.SplitColumn(#"Duplicated Column", "start_time - Copy", Splitter.SplitTextByEachDelimiter({"/"}, QuoteStyle.Csv, false), {"start_time - Copy.1", "start_time - Copy.2"}),
     #"Changed Type1" = Table.TransformColumnTypes(#"Split Column by Delimiter",{{"start_time - Copy.1", Int64.Type}, {"start_time - Copy.2", type text}}),
@@ -26,7 +40,11 @@ let
     #"Added Custom" = Table.AddColumn(#"Renamed Columns2", "booking_date", each Date.From(#datetime([time_year],[time_month],[time_day],0,0,0))),
     #"Changed Type4" = Table.TransformColumnTypes(#"Added Custom",{{"booking_date", type date}}),
     #"Removed Columns" = Table.RemoveColumns(#"Changed Type4",{"start_time", "time_month", "time_day", "time_year"}),
+    
+    // Transforming bike-type as proper case
     #"Capitalized Each Word" = Table.TransformColumns(#"Removed Columns",{{"bike_type", Text.Proper, type text}}),
+    
+    // Removing duplicate trip_id field
     #"Removed Duplicates" = Table.Distinct(#"Capitalized Each Word", {"trip_id"}),
     #"Added Custom1" = Table.AddColumn(#"Removed Duplicates", "hire_duration", each #duration(0,0,0,[duration])),
     #"Changed Type5" = Table.TransformColumnTypes(#"Added Custom1",{{"hire_duration", type duration}}),
@@ -37,7 +55,9 @@ let
     #"Duplicated Column1" = Table.DuplicateColumn(#"Changed Type7", "hour", "hour - Copy"),
     #"Changed Type8" = Table.TransformColumnTypes(#"Duplicated Column1",{{"hour - Copy", type text}}),
     #"Renamed Columns3" = Table.RenameColumns(#"Changed Type8",{{"hour - Copy", "hourastext"}})
+
 in
+    
     #"Renamed Columns3"
 
 
